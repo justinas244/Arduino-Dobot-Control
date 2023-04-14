@@ -38,52 +38,11 @@ void movejoint(double joint1, double joint2, double joint3, double joint4)
   
 }
 
-void Vakumas(bool vacuumOn){
-    if (endeffectorGripper == true) {
-        if (vacuumOn == false && vacuumOn != currentVac) {
-            Serial.println("Open GRIPPER");
-            //delay(1000);
-            SetEndEffectorSuctionCup(false, true, &gQueuedCmdIndex);
-            ProtocolProcess(); //have command(s) executed by dobot
-            delay(500);
-            SetEndEffectorGripper(true, true, &gQueuedCmdIndex); // open gripper (compressed air on);
-            ProtocolProcess(); //have command(s) executed by dobot
-            delay(500);
-            SetEndEffectorGripper(false, true, &gQueuedCmdIndex);  // stop activating gripper when it is openend (compressed air off)
-            delay(500); 
-            }
-      }
-      else{
-      if (vacuumOn == false) SetEndEffectorSuctionCup(false, false, &gQueuedCmdIndex);
-      }
-      
-      if (vacuumOn == true && vacuumOn != currentVac)SetEndEffectorSuctionCup(true, false, &gQueuedCmdIndex);
-      ProtocolProcess();
-
-      currentVac = vacuumOn;
+void Vakumas(bool states){
+   SetEndEffectorGripper(states, states, &gQueuedCmdIndex); // open gripper (compressed air on);
+   ProtocolProcess(); //have command(s) executed by dobot
 }
-
-void Griperis_atleisti(){
-    if(suspausta == true){
-      SetEndEffectorGripper(true, false, &gQueuedCmdIndex);  // iskleidziam bet oras dar ijungtas
-      ProtocolProcess();
-      delay(2000);
-      suspausta == false;
-    }
-    SetEndEffectorGripper(false, true, &gQueuedCmdIndex);
-    ProtocolProcess();
-    suspausta == false;
-    delay(2000);
-}
-
-void Siurbtukas(bool state){
-  SetEndEffectorSuctionCup(state, false, &gQueuedCmdIndex);
-  ProtocolProcess();
-  delay(2000);
-}
-
 void HomeX(){
-  
    while(true){
       startPosX++;
       moveArm(startPosX, startPosY, startPosZ, startPosR);
@@ -91,7 +50,6 @@ void HomeX(){
       if(xhome_mygtukas == LOW){ break;}
       delay(200);
     }
-    
 }
 void HomeY(){
   float joint1 = 0;
@@ -151,8 +109,7 @@ void Home(){
     ProtocolProcess();
     delay(3000);
   }
-  delay(5000);
-  
+  delay(3000);
 }
 void sendWaitCommand(uint32_t duration) {
   // Start of message
@@ -261,7 +218,13 @@ void laukimas(int laikas){
       break;
     }
 }
+void belt_on(){
+  Serial2.println("M312 2000");
+}
 
+void belt_off(){
+  Serial2.println("M312 0");
+}
 
 
 

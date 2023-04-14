@@ -57,7 +57,7 @@ float currentY = 0;
 float currentZ = 0;   
 float currentR = 0;
 bool currentVac = false;
-bool endeffectorGripper = false; // indicate type of end effector: true for gripper, false for vacuum cup
+bool endeffectorGripper = true; // indicate type of end effector: true for gripper, false for vacuum cup
 
 float currentjoint1 = 0;     
 float currentjoint2 = 0;   
@@ -107,15 +107,15 @@ int trecia_eile = 3;
 
 bool start_komanda = true;
 
-double point1[4] = {217.6357, 120.1758 , -43.00   , 0};
-double point2[4] = {178.5357, 122.0088 , -43.00   , 0};
-double point3[4] = {138.6986, 124.6019 , -43.00   , 0};
-double point4[4] = {218.9079, 159.9332 , -43.00   , 0};
-double point5[4] = {180.2213, 162.9806 , -43.00   , 0};
-double point6[4] = {140.9093, 165.2853 , -43.00   , 0};
-double point7[4] = {220.0648, 200.6643 , -43.00   , 0};
-double point8[4] = {181.4996, 203.4047 , -43.00   , 0};
-double point9[4] = {140.9395, 203.4053 , -43.00   , 0};
+double point1[4] = {214.2818, 123.7864 , -43.00   , 0};
+double point2[4] = {178.5273, 126.9298 , -43.00   , 0};
+double point3[4] = {136.0884, 127.8668 , -43.00   , 0};
+double point4[4] = {216.3013, 165.6214 , -43.00   , 0};
+double point5[4] = {177.3020, 166.7735 , -43.00   , 0};
+double point6[4] = {137.5098, 167.3504 , -43.00   , 0};
+double point7[4] = {218.4436, 206.0919 , -43.00   , 0};
+double point8[4] = {177.2367, 206.1452 , -43.00   , 0};
+double point9[4] = {137.2518, 207.7057 , -43.00   , 0};
 
 double Detuves_kordinates[9][4] = {        //cartesian cordinate
   {point1[0], point1[1], point1[2], point1[3]},
@@ -139,6 +139,13 @@ double Detuves_kordinates[9][4] = {        //cartesian cordinate
 void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
+  Serial2.begin(115200);
+
+  delay(1000);
+  Serial2.println("M310 1");
+  delay(4000);
+  Serial2.println("M313 80");
+  
   printf_begin();
   //Set Timer Interrupt
   FlexiTimer2::set(100, Serialread);
@@ -163,12 +170,16 @@ void setup() {
   printf("\r\n======Main Program loop started======\r\n");
 
   SetPTPCmd(&gPTPCmd, true, &gQueuedCmdIndex);
-  
    ProtocolProcess();
-   delay(2000);
+   delay(1000);
+   Vakumas(true);
+   delay(3000);
    Home();
-   //moveArm(180, 50, 30, 30);
+   delay(1000);
    detaliu_pozicija(pirma_eile, antra_eile, trecia_eile);
+   delay(1000);
+   Vakumas(false);
+   delay(1000);
 }
 
 /*********************************************************************************************************
@@ -245,8 +256,6 @@ void InitRAM(void)
     gJOGCmd.cmd = AP_DOWN;
     gJOGCmd.isJoint = JOINT_MODEL;
 
-  
-
     //Set PTP Model
     gPTPCoordinateParams.xyzVelocity = 100;
     gPTPCoordinateParams.rVelocity = 100;
@@ -259,7 +268,8 @@ void InitRAM(void)
     gPTPCmd.ptpMode = MOVJ_XYZ;
     
     gQueuedCmdIndex = 0;
-    moveArm(startPosX, startPosY, startPosZ, startPosR);
+   moveArm(startPosX, startPosY, startPosZ, startPosR);
+    //moveranka(startPosX, startPosY, startPosZ, startPosR, true);
 }
 /*********************************************************************************************************
 ** Function name:       loop
@@ -270,80 +280,63 @@ void InitRAM(void)
 *********************************************************************************************************/
 
 void loop(){
-    movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
-    // ProtocolProcess();
-    /*movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
-    moveranka(Detuves_kordinates[0][0], Detuves_kordinates[0][1], Detuves_kordinates[0][2], Detuves_kordinates[0][3], true);
-    while(true){
-       ProtocolProcess();
-      delay(5000);
-      break;
-    }*/
-    //moveranka(Detuves_kordinates[0][0], Detuves_kordinates[0][1], Detuves_kordinates[0][2]+50, Detuves_kordinates[0][3], false);
-    //delay(5000);
-    
-    /* delay(1000);
-     moveArm(Detuves_kordinates[0][0], Detuves_kordinates[0][1], Detuves_kordinates[0][2]+50, Detuves_kordinates[0][3]);
-     movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
-     movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
-     movejoint(spalvos_check_point[0], spalvos_check_point[1], spalvos_check_point[2], spalvos_check_point[3]);*/
-     digitalWrite(led,HIGH);
 
+    movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
+     
      if(start_komanda == true){
         for(int i=0; i<=8; i++){
            if(Detuve[i] == 1){
              movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2]+50, Detuves_kordinates[i][3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2], Detuves_kordinates[i][3]);
              ProtocolProcess();
-             delay(3000);
+             delay(4000);
              
              Vakumas(true);
-             ProtocolProcess();
-             delay(100);
+             delay(3000);
              
              moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2]+50, Detuves_kordinates[i][3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              moveArm(spalvos_check_point[0], spalvos_check_point[1], spalvos_check_point[2], spalvos_check_point[3]);
              ProtocolProcess();
-             delay(3000);
+             delay(1000);
              
              moveArm(spalvos_check_point[0], spalvos_check_point[1], spalvos_check_point[2]+25, spalvos_check_point[3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              moveArm(belt_point[0], belt_point[1], belt_point[2], belt_point[3]);
              ProtocolProcess();
-             delay(100);
-     
+             delay(4000);
+                      
              Vakumas(false);
-             ProtocolProcess();
              delay(3000);
 
              moveArm(belt_point[0], belt_point[1], belt_point[2]+25, belt_point[3]);
              ProtocolProcess();
-             delay(100);
+             delay(1000);
              
              movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]); 
              ProtocolProcess();
-             delay(100);
-             
+             delay(1000);
+             belt_on();
+             delay(10000);
              Detuve[i] = 0;
            }
         }
@@ -352,34 +345,7 @@ void loop(){
         Serial.println("Baigtas procesas");
      }
      
-     
-//      while(true){
-//        if(Detuve[i] == 1){
-//             movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
-//             moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2], Detuves_kordinates[i][3]);
-//             delay(10000);
-//             Vakumas(true);
-//             moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2]+50, Detuves_kordinates[i][3]);
-//             movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
-//             movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
-//             moveArm(spalvos_check_point[0], spalvos_check_point[1], spalvos_check_point[2], spalvos_check_point[3]);
-//             moveArm(spalvos_check_point[0], spalvos_check_point[1], spalvos_check_point[2]+25, spalvos_check_point[3]);
-//             moveArm(belt_point[0], belt_point[1], belt_point[2], belt_point[3]);
-//             Vakumas(false);
-//             moveArm(belt_point[0], belt_point[1], belt_point[2]+25, belt_point[3]);
-//             movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]); 
-//           }
-//         i++;
-//           if(i>8){ 
-//              start_komanda = false;
-//              Serial.println("Baigtas procesas");
-//              i= 0; 
-//              break;
-//           }
-//      }
-      
      delay(5000);
-    
     
 }
 

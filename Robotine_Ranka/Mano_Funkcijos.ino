@@ -102,8 +102,12 @@ void Home(){
     movejoint(darbinis_point[0], darbinis_point[1], darbinis_point[2], darbinis_point[3]);
     ProtocolProcess();
     delay(3000);
+    Vakumas(true);
+    delay(3000);
     movejoint(paeimimo_point[0], paeimimo_point[1], paeimimo_point[2], paeimimo_point[3]);
     ProtocolProcess();
+    delay(3000);
+    Vakumas(false);
     delay(3000);
     moveArm(Detuves_kordinates[i][0], Detuves_kordinates[i][1], Detuves_kordinates[i][2]+50, Detuves_kordinates[i][3]);
     ProtocolProcess();
@@ -219,12 +223,125 @@ void laukimas(int laikas){
     }
 }
 void belt_on(){
-  Serial2.println("M312 2000");
+  Serial2.println("M311 -80");
 }
 
 void belt_off(){
-  Serial2.println("M312 0");
+  Serial2.println("M311 0");
 }
 
+
+void rusiavimas(int spalvos_kodas){
+  if(spalvos_kodas !=0){
+    belt_on();
+    while(true){
+      rusiavimo_optika = digitalRead(rusiavimo_optikos_pin);
+      if(rusiavimo_optika == LOW){ break; }
+    }
+   belt_off();
+   delay(500); 
+   movejoint(rusiavimo_darbinis[0], rusiavimo_darbinis[1], rusiavimo_darbinis[2], rusiavimo_darbinis[3]);
+   ProtocolProcess();
+   delay(2000);
+   for(int i =0; i<=3; i++){
+     if(rusiavimo_tvarka[i] == spalvos_kodas){
+        moveArm(rusiavimo_kordinates[i][0], rusiavimo_kordinates[i][1], (rusiavimo_kordinates[i][2]+(kubelio_skirtumas*kubeliu_skaicius_rusiavime[i])+50), rusiavimo_kordinates[i][3]);
+        ProtocolProcess();
+        delay(4000);
+        moveArm(rusiavimo_kordinates[i][0], rusiavimo_kordinates[i][1], rusiavimo_kordinates[i][2]+(kubelio_skirtumas*kubeliu_skaicius_rusiavime[i]), rusiavimo_kordinates[i][3]);
+        ProtocolProcess();
+        delay(4000);
+        Vakumas(false);
+        delay(3000);
+        moveArm(rusiavimo_kordinates[i][0], rusiavimo_kordinates[i][1], (rusiavimo_kordinates[i][2]+(kubelio_skirtumas*kubeliu_skaicius_rusiavime[i])+50), rusiavimo_kordinates[i][3]);
+        ProtocolProcess();
+        delay(2000);
+        kubeliu_skaicius_rusiavime[i]++;
+     }
+   }
+   
+   movejoint(rusiavimo_darbinis[0], rusiavimo_darbinis[1], rusiavimo_darbinis[2], rusiavimo_darbinis[3]);
+   ProtocolProcess();
+   delay(1000);
+  }
+}
+void nuskaitymas_spalvos(){
+  // Setting RED (R) filtered photodiodes to be read
+  digitalWrite(S2,LOW);
+  digitalWrite(S3,LOW);
+  digitalWrite(led, HIGH);
+  // Reading the output frequency
+  redFrequency = pulseIn(sensorOut, LOW);
+  
+   // Printing the RED (R) value
+  Serial.print("R = ");
+  Serial.print(redFrequency);
+  delay(100);
+  
+  // Setting GREEN (G) filtered photodiodes to be read
+  digitalWrite(S2,HIGH);
+  digitalWrite(S3,HIGH);
+  
+  // Reading the output frequency
+  greenFrequency = pulseIn(sensorOut, LOW);
+  
+  // Printing the GREEN (G) value  
+  Serial.print(" G = ");
+  Serial.print(greenFrequency);
+  delay(100);
+ 
+  // Setting BLUE (B) filtered photodiodes to be read
+  digitalWrite(S2,LOW);
+  digitalWrite(S3,HIGH);
+  
+  // Reading the output frequency
+  blueFrequency = pulseIn(sensorOut, LOW);
+  
+  // Printing the BLUE (B) value 
+  Serial.print(" B = ");
+  Serial.println(blueFrequency);
+  delay(100);
+  
+  if(buvo_aptikta == false){ aptikta_spalva =spalva(redFrequency,greenFrequency,blueFrequency);}
+  
+  if(aptikta_spalva >0){ buvo_aptikta = true; }
+  
+  if(aptikta_spalva == 1){
+    Serial.println("Aptikta RAUDONA");
+  }
+  else if(aptikta_spalva == 2){
+    Serial.println("Aptikta GELTONA");
+  }
+  else if(aptikta_spalva == 3){
+    Serial.println("Aptikta ZALIA");
+  }
+  else if(aptikta_spalva == 4){
+    Serial.println("Aptikta MELYNA");
+  }
+  else if(aptikta_spalva == 0){
+    Serial.println("Nera SPALVOS TOKIOS");
+  }
+  delay(2000);
+  digitalWrite(led, LOW);
+  delay(2000);
+}
+
+int spalva(int r, int g, int b){
+   if((r >= raudona[0] && r <= raudona[1])&&(g >= raudona[2] && g <= raudona[3])&&(b >= raudona[4] && b <= raudona[5])){
+    return 1;
+   }
+   else if((r >= geltona[0] && r <= geltona[1])&&(g >= geltona[2] && g <= geltona[3])&&(b >= geltona[4] && b <= geltona[5])){
+    return 2;
+   }
+   else if((r >= zalia[0] && r <= zalia[1])&&(g >= zalia[2] && g <= zalia[3])&&(b >= zalia[4] && b <= zalia[5])){
+    return 3;
+   }
+   else if((r >= melyna[0] && r <= melyna[1])&&(g >= melyna[2] && g <= melyna[3])&&(b >= melyna[4] && b <= melyna[5])){
+    return 4;
+   }
+   else{
+    return 0;
+   }
+}
 
 
